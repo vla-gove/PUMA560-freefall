@@ -1,0 +1,45 @@
+The forward and inverse dynamics of the finger can be simulated using the functions fdyn() and rne() respectively.
+
+ 
+
+The function fdyn() is defined as:
+
+ 
+
+[t q qd] = fdyn (finger, t0, t1, ‘torqfun’, q0, qd0)
+
+ 
+
+Finger is the kinematic and dynamic charactersitic, t0and t1 are start and finish times of the computation, torqfun is the function which which specifies the actuator torques. Its defined as
+
+ 
+
+tau = torqfun (t, q, qd)
+
+ 
+
+where t is the current time, q and qd are current joint angles and angular velocities. Typically this is used to define the control input to the system. The initial angles and velocities are specified by q0 and qd0.
+
+fdyn uses the Matlab’s ODE45 numerical integration function to compute the forward dynamics.
+
+For our simulation the torque function uses precomputed joint trajectories, and the trajectory is interpolated for the specified time length. And this trajectory is followed by a PD control law.
+
+ 
+
+function tau=finger_torqfun(t,q,qd)
+
+global pgain dgain qt tau2;
+
+if t>qt(length(qt),1)
+
+    t=qt(length(qt),1);
+
+end
+
+q_des=interp1(qt(:,1),qt(:,2:4),t);
+
+dgain=[0.01 0.01 0.01];
+
+e=q_des'-q;
+
+tau=0.5*e'*diag(pgain) - qd'*diag(dgain);
